@@ -79,14 +79,16 @@ def send_link(call):
 
 
 def order(msg):
+    id = msg.chat.id
+    TEMP_ORDER[id] = {'name': '', 'email': '', 'address': ''}
     enter_info(msg, value='name')
-    while not TEMP_ORDER['name']:
+    while not TEMP_ORDER[id]['name']:
         continue
     enter_info(msg, value='email')
-    while not TEMP_ORDER['email']:
+    while not TEMP_ORDER[id]['email']:
         continue
     enter_info(msg, value='address')
-    while not TEMP_ORDER['address']:
+    while not TEMP_ORDER[id]['address']:
         continue
     order_finish(msg)
 
@@ -101,7 +103,7 @@ def enter_info(message, edit=0, value=None):
 
 
 def recieve_info(message, edit, value):
-    TEMP_ORDER[value] = message.text
+    TEMP_ORDER[message.chat.id][value] = message.text
     if edit:
         edit_menu(message)
 
@@ -113,28 +115,29 @@ def order_finish(message):
     create_order_button = telebot.types.InlineKeyboardButton(
         'Подтвердить заказ', callback_data='create')
     markup.row(create_order_button, edit_button)
+    id = message.chat.id
     bot.send_message(
-        message.chat.id,
+        id,
         f'Проверьте правильность заполненных полей и завершите оформление заказа:\n'
-        f'Имя: {TEMP_ORDER["name"]}\n'
-        f'Почта: {TEMP_ORDER["email"]}\n'
-        f'Адрес: {TEMP_ORDER["address"]}',
+        f'Имя: {TEMP_ORDER[id]["name"]}\n'
+        f'Почта: {TEMP_ORDER[id]["email"]}\n'
+        f'Адрес: {TEMP_ORDER[id]["address"]}',
         reply_markup=markup)
 
 
 def show_new_order(call):
+    id = call.message.chat.id
     bot.send_message(
-        call.message.chat.id,
+        id,
         f"Спасибо за заказ! "
         f"Мы свяжемся с Вами в ближайшее время!")
     bot.send_message(
         MY_ID,
         f'Новый заказ подъехал!\n\n'
-        f'Имя: {TEMP_ORDER["name"]}\n'
-        f'Почта: {TEMP_ORDER["email"]}\n'
-        f'Адрес: {TEMP_ORDER["address"]}')
-    for key in TEMP_ORDER.keys():
-        TEMP_ORDER[key] = ''
+        f'Имя: {TEMP_ORDER[id]["name"]}\n'
+        f'Почта: {TEMP_ORDER[id]["email"]}\n'
+        f'Адрес: {TEMP_ORDER[id]["address"]}')
+    del TEMP_ORDER[id]
 
 
 def edit_menu(message):
