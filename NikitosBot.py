@@ -9,6 +9,12 @@ TEMP_ORDER = {
     'address': ''
 }
 
+COMMAND_DICT = {
+    'name': 'Ваше имя',
+    'email': 'Вашу почту',
+    'address': 'Ваш адрес'
+}
+
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -58,11 +64,11 @@ def handle(call):
     elif data == 'create':
         show_new_order(call)
     elif data == 'name':
-        enter_name(call.message, 1)
+        enter_info(call.message, edit=1, value='name')
     elif data == 'email':
-        enter_email(call.message, 1)
+        enter_info(call.message, edit=1, value='email')
     elif data == 'address':
-        enter_address(call.message, 1)
+        enter_info(call.message, edit=1, value='address')
     elif data == 'back':
         order_finish(call.message)
     bot.answer_callback_query(call.id)
@@ -73,73 +79,31 @@ def send_link(call):
 
 
 def order(msg):
-    enter_name(msg)
+    enter_info(msg, value='name')
     while not TEMP_ORDER['name']:
         continue
-    enter_email(msg)
+    enter_info(msg, value='email')
     while not TEMP_ORDER['email']:
         continue
-    enter_address(msg)
+    enter_info(msg, value='address')
     while not TEMP_ORDER['address']:
         continue
     order_finish(msg)
 
 
-def enter_name(message, edit=0):
+def enter_info(message, edit=0, value=None):
     markup = telebot.types.ForceReply(selective=False)
     msg = bot.send_message(
         message.chat.id,
-        f'Введите Ваше имя: ',
+        f'Введите {COMMAND_DICT[value]}: ',
         reply_markup=markup)
-    bot.register_next_step_handler(msg, recieve_name, edit=edit)
+    bot.register_next_step_handler(msg, recieve_info, edit=edit, value=value)
 
 
-def recieve_name(message, edit):
-    TEMP_ORDER['name'] = message.text
-    """bot.send_message(
-                    message.chat.id,
-                    f'Ваше имя: {TEMP_ORDER["name"]}')"""
+def recieve_info(message, edit, value):
+    TEMP_ORDER[value] = message.text
     if edit:
         edit_menu(message)
-    # enter_email(message)
-
-
-def enter_email(message, edit=0):
-    markup = telebot.types.ForceReply(selective=False)
-    msg = bot.send_message(
-        message.chat.id,
-        f'Введите Вашу почту: ',
-        reply_markup=markup)
-    bot.register_next_step_handler(msg, recieve_email, edit=edit)
-
-
-def recieve_email(message, edit):
-    TEMP_ORDER['email'] = message.text
-    """bot.send_message(
-                    message.chat.id,
-                    f'Ваш email: {TEMP_ORDER["email"]}')"""
-    if edit:
-        edit_menu(message)
-    # enter_address(message)
-
-
-def enter_address(message, edit=0):
-    markup = telebot.types.ForceReply(selective=False)
-    msg = bot.send_message(
-        message.chat.id,
-        f'Введите Ваш адрес: ',
-        reply_markup=markup)
-    bot.register_next_step_handler(msg, recieve_address, edit=edit)
-
-
-def recieve_address(message, edit):
-    TEMP_ORDER['address'] = message.text
-    """bot.send_message(
-                 message.chat.id,
-                 f'Ваш адрес: {TEMP_ORDER["address"]}')"""
-    if edit:
-        edit_menu(message)
-    # order_finish(message)
 
 
 def order_finish(message):
