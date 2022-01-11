@@ -74,17 +74,25 @@ def send_link(call):
 @bot.message_handler(regexp='Оформить заказ')
 def order(msg):
     id = msg.chat.id
-    TEMP_ORDER[id] = {'name': '', 'email': '', 'address': ''}
-    enter_info(msg, value='name')
-    while not TEMP_ORDER[id]['name']:
-        continue
-    enter_info(msg, value='email')
-    while not TEMP_ORDER[id]['email']:
-        continue
-    enter_info(msg, value='address')
-    while not TEMP_ORDER[id]['address']:
-        continue
-    order_finish(msg)
+    db = BotDatabase('database.db')
+    user = db.find_user(id)
+    db.close_db()
+    if user:
+        TEMP_ORDER[id] = {'name': user[0],
+                          'email': user[1], 'address': user[2]}
+        order_finish(msg)
+    else:
+        TEMP_ORDER[id] = {'name': '', 'email': '', 'address': ''}
+        enter_info(msg, value='name')
+        while not TEMP_ORDER[id]['name']:
+            continue
+        enter_info(msg, value='email')
+        while not TEMP_ORDER[id]['email']:
+            continue
+        enter_info(msg, value='address')
+        while not TEMP_ORDER[id]['address']:
+            continue
+        order_finish(msg)
 
 
 def enter_info(message, edit=0, value=None):
@@ -137,12 +145,18 @@ def show_new_order(call):
         f'Имя: {TEMP_ORDER[id]["name"]}\n'
         f'Почта: {TEMP_ORDER[id]["email"]}\n'
         f'Адрес: {TEMP_ORDER[id]["address"]}')
-    # функция вставки в базу данных
     db = BotDatabase('database.db')
-    db.insert_into_db(id,
-                      TEMP_ORDER[id]["name"],
-                      TEMP_ORDER[id]["email"],
-                      TEMP_ORDER[id]["address"])
+    user = db.find_user(id)
+    if user:
+        db.update_user(id,
+                       TEMP_ORDER[id]["name"],
+                       TEMP_ORDER[id]["email"],
+                       TEMP_ORDER[id]["address"])
+    else:
+        db.insert_into_db(id,
+                          TEMP_ORDER[id]["name"],
+                          TEMP_ORDER[id]["email"],
+                          TEMP_ORDER[id]["address"])
     db.close_db()
     del TEMP_ORDER[id]
 

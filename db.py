@@ -60,9 +60,21 @@ class BotDatabase:
     def insert_into_db(self, chat_id, name, email, address):
         self.cursor.execute("""INSERT INTO players (chat_id, name, email, address) VALUES (?, ?, ?, ?)""",
                             (chat_id, name, email, address))
-        last_id = self.cursor.execute(f"""SELECT id FROM players WHERE chat_id = {chat_id}""").fetchall()[-1][0]
+        id = self.cursor.execute(f"""SELECT id FROM players WHERE chat_id = {chat_id}""").fetchone()[0]
         self.cursor.execute("""INSERT INTO orders (player_id, device_id) VALUES (?, ?)""",
-                            (last_id, 1))
+                            (id, 1))
+        self.conn.commit()
+
+    def find_user(self, chat_id):
+        user = self.cursor.execute(f"""SELECT name, email, address FROM players WHERE chat_id = {chat_id}""").fetchone()
+        return user
+
+    def update_user(self, chat_id, name, email, address):
+        self.cursor.execute("""UPDATE players SET name = ?, email = ?, address = ? WHERE chat_id = ?""",
+                            (name, email, address, chat_id))
+        id = self.cursor.execute(f"""SELECT id FROM players WHERE chat_id = {chat_id}""").fetchone()[0]
+        self.cursor.execute("""INSERT INTO orders (player_id, device_id) VALUES (?, ?)""",
+                            (id, 1))
         self.conn.commit()
 
     def close_db(self):
