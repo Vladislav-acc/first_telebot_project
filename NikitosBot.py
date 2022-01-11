@@ -1,12 +1,10 @@
 import telebot
 from config import LINK, TOKEN, CHAT_ID, MY_ID
+from db import BotDatabase, BotDatabaseConn
 
 
 TEMP_ORDER = {
-    'id': 0,
-    'name': '',
-    'email': '',
-    'address': ''
+
 }
 
 COMMAND_DICT = {
@@ -26,29 +24,24 @@ def send_message_to_group(message):
         CHAT_ID, 'Здарова, это тестовое сообщение, листай дальше!')
 
 
+@bot.message_handler(regexp='О нас')
 @bot.message_handler(commands=['start'])
 def start_command(message):
     # print(bot.get_chat('@TestBotChat').id)
     markup = telebot.types.InlineKeyboardMarkup()
     link_button = telebot.types.InlineKeyboardButton(
-        'Получить ссылку на обзор', callback_data='link')
+        'Видеообзор', callback_data='link')
     start_order_button = telebot.types.InlineKeyboardButton(
         'Оформить заказ', callback_data='order')
     markup.row(link_button, start_order_button)
     bot.send_message(
         message.chat.id,
-
         f'Rat - современный взгляд на классический дисторшн ProCo Rat.\n\n'
-
         f'Устранены все проблемы оригинала: установлено стандартное гнездо питания boss style, вход и выход перенесены наверх для удобства коммутации в педалборде, корпус - легкий и компактный.\n\n'
-
         f'Полностью ручная сборка, заводская плата, качественные комплектующие, оригинальная микросхема LM308.\n\n'
-
         f'Стоимость: 7000 рублей.\n\n'
         f'Оплатить можно переводом по номеру телефона (тинькофф/сбер):\n\n'
-
         f'89629080844\n\n',
-
         reply_markup=markup)
 
 
@@ -78,6 +71,7 @@ def send_link(call):
     bot.send_message(call.message.chat.id, f'{LINK}')
 
 
+@bot.message_handler(regexp='Оформить заказ')
 def order(msg):
     id = msg.chat.id
     TEMP_ORDER[id] = {'name': '', 'email': '', 'address': ''}
@@ -127,16 +121,29 @@ def order_finish(message):
 
 def show_new_order(call):
     id = call.message.chat.id
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    about_button = telebot.types.KeyboardButton(
+        'О нас')
+    order_button = telebot.types.KeyboardButton(
+        'Оформить заказ')
+    markup.row(about_button, order_button)
     bot.send_message(
         id,
         f"Спасибо за заказ! "
-        f"Мы свяжемся с Вами в ближайшее время!")
+        f"Мы свяжемся с Вами в ближайшее время!", reply_markup=markup)
     bot.send_message(
         MY_ID,
         f'Новый заказ подъехал!\n\n'
         f'Имя: {TEMP_ORDER[id]["name"]}\n'
         f'Почта: {TEMP_ORDER[id]["email"]}\n'
         f'Адрес: {TEMP_ORDER[id]["address"]}')
+    # функция вставки в базу данных
+    db = BotDatabase('database.db')
+    db.insert_into_db(id,
+                      TEMP_ORDER[id]["name"],
+                      TEMP_ORDER[id]["email"],
+                      TEMP_ORDER[id]["address"])
+    db.close_db()
     del TEMP_ORDER[id]
 
 
@@ -158,13 +165,8 @@ def edit_menu(message):
         reply_markup=markup)
 
 
-@bot.message_handler(func=lambda m: True)
-def send_link(message):
-    '''markup = telebot.types.ForceReply(selective=False)
-                bot.send_message(
-                    message.chat.id,
-                    f'Введи своё имя, щенок: ',
-                    reply_markup=markup)'''
-
-
-bot.polling(none_stop=True)
+if __name__ == '__main__':
+    db = BotDatabase('database.db')
+    db.create_database()
+    db.close_db()
+    bot.polling(none_stop=True)
