@@ -80,6 +80,7 @@ def order(msg):
     if user:
         TEMP_ORDER[id] = {'name': user[0],
                           'email': user[1], 'address': user[2]}
+        # print(TEMP_ORDER)
         order_finish(msg)
     else:
         TEMP_ORDER[id] = {'name': '', 'email': '', 'address': ''}
@@ -105,17 +106,24 @@ def enter_info(message, edit=0, value=None):
 
 
 def recieve_info(message, edit, value):
+    # print(TEMP_ORDER[message.chat.id][value])
     TEMP_ORDER[message.chat.id][value] = message.text
+    # print(TEMP_ORDER[message.chat.id][value])
     if edit:
         edit_menu(message)
 
 
 def order_finish(message):
-    markup = telebot.types.InlineKeyboardMarkup()
-    edit_button = telebot.types.InlineKeyboardButton(
-        'Редактировать', callback_data='edit')
-    create_order_button = telebot.types.InlineKeyboardButton(
-        'Подтвердить заказ', callback_data='create')
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    edit_button = telebot.types.KeyboardButton(
+        'Редактировать')
+    create_order_button = telebot.types.KeyboardButton(
+        'Подтвердить заказ')
+    """markup = telebot.types.InlineKeyboardMarkup()
+                edit_button = telebot.types.InlineKeyboardButton(
+                    'Редактировать', callback_data='edit')
+                create_order_button = telebot.types.InlineKeyboardButton(
+                    'Подтвердить заказ', callback_data='create')"""
     markup.row(create_order_button, edit_button)
     id = message.chat.id
     bot.send_message(
@@ -127,8 +135,9 @@ def order_finish(message):
         reply_markup=markup)
 
 
-def show_new_order(call):
-    id = call.message.chat.id
+@bot.message_handler(regexp='Подтвердить заказ')
+def show_new_order(message):
+    id = message.chat.id
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
     about_button = telebot.types.KeyboardButton(
         'О нас')
@@ -161,6 +170,7 @@ def show_new_order(call):
     del TEMP_ORDER[id]
 
 
+@bot.message_handler(regexp='Редактировать')
 def edit_menu(message):
     markup = telebot.types.InlineKeyboardMarkup()
     edit_name_button = telebot.types.InlineKeyboardButton(
