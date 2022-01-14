@@ -17,13 +17,6 @@ COMMAND_DICT = {
 bot = telebot.TeleBot(TOKEN)
 
 
-@bot.message_handler(commands=['send'])
-def send_message_to_group(message):
-    print('Шлю!')
-    bot.send_message(
-        CHAT_ID, 'Здарова, это тестовое сообщение, листай дальше!')
-
-
 @bot.message_handler(regexp='О нас')
 @bot.message_handler(commands=['start'])
 def start_command(message):
@@ -97,8 +90,8 @@ def order(msg):
         order_finish(msg)
 
 
-@ bot.message_handler(regexp='Сменить устройство')
-@ bot.message_handler(regexp='Оформить заказ')
+@bot.message_handler(regexp='Сменить устройство')
+@bot.message_handler(regexp='Оформить заказ')
 def choose_device(message):
     id = message.chat.id
     TEMP_ORDER[id] = {'device': '', 'name': '', 'email': '', 'address': ''}
@@ -164,7 +157,7 @@ def order_finish(message):
         reply_markup=markup)
 
 
-@ bot.message_handler(regexp='Подтвердить заказ')
+@bot.message_handler(regexp='Подтвердить заказ')
 def show_new_order(message):
     id = message.chat.id
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -202,7 +195,7 @@ def show_new_order(message):
     del TEMP_ORDER[id]
 
 
-@ bot.message_handler(regexp='Редактировать')
+@bot.message_handler(regexp='Редактировать')
 def edit_menu(message):
     markup = telebot.types.InlineKeyboardMarkup()
     edit_name_button = telebot.types.InlineKeyboardButton(
