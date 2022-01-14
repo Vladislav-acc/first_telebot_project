@@ -27,7 +27,6 @@ def send_message_to_group(message):
 @bot.message_handler(regexp='О нас')
 @bot.message_handler(commands=['start'])
 def start_command(message):
-    # print(bot.get_chat('@TestBotChat').id)
     markup = telebot.types.InlineKeyboardMarkup()
     link_button = telebot.types.InlineKeyboardButton(
         'Видеообзор', callback_data='link')
@@ -84,7 +83,6 @@ def order(msg):
         TEMP_ORDER[id]['name'] = user[0]
         TEMP_ORDER[id]['email'] = user[1]
         TEMP_ORDER[id]['address'] = user[2]
-        # print(TEMP_ORDER)
         order_finish(msg)
     else:
         enter_info(msg, value='name')
@@ -144,9 +142,7 @@ def enter_info(message, edit=0, value=None):
 
 
 def recieve_info(message, edit, value):
-    # print(TEMP_ORDER[message.chat.id][value])
     TEMP_ORDER[message.chat.id][value] = message.text
-    # print(TEMP_ORDER[message.chat.id][value])
     if edit:
         edit_menu(message)
 
@@ -157,11 +153,6 @@ def order_finish(message):
         'Редактировать')
     create_order_button = telebot.types.KeyboardButton(
         'Подтвердить заказ')
-    """markup = telebot.types.InlineKeyboardMarkup()
-                edit_button = telebot.types.InlineKeyboardButton(
-                    'Редактировать', callback_data='edit')
-                create_order_button = telebot.types.InlineKeyboardButton(
-                    'Подтвердить заказ', callback_data='create')"""
     markup.row(create_order_button, edit_button)
     id = message.chat.id
     bot.send_message(

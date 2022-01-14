@@ -1,7 +1,7 @@
 import sqlite3
 
 
-class BotDatabaseConn:
+"""class BotDatabaseConn:
     def __init__(self, filename):
         self.filename = filename
 
@@ -10,7 +10,7 @@ class BotDatabaseConn:
         return self.conn
 
     def __exit__(self, type, value, tb):
-        self.conn.close()
+        self.conn.close()"""
 
 
 class BotDatabase:
