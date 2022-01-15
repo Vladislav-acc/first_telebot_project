@@ -21,6 +21,10 @@ class BotDatabase:
 
     def create_database(self):
 
+        """
+        Создание необходимой для функционирования бота базы данных.
+        """
+
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS players (
             id INTEGER PRIMARY KEY,
             chat_id INTEGER UNIQUE,
@@ -44,20 +48,12 @@ class BotDatabase:
             """)
         self.conn.commit()
 
-    def something_to_test(self):
-
-        self.cursor.execute("""INSERT INTO players (chat_id, name, email, address) VALUES (?, ?, ?, ?)""",
-                            (126, 'Vlad', 'vlad@mail.ru', 'MSK'))
-        self.cursor.execute("""INSERT INTO orders (player_id, device_id) VALUES (?, ?)""",
-                            (1, 1))
-        info = self.cursor.execute("""SELECT * FROM orders""")
-        print(info.fetchall())
-        info = self.cursor.execute("""SELECT * FROM players""")
-        print(info.fetchall())
-        info = self.cursor.execute("""SELECT * FROM devices""")
-        print(info.fetchall())
-
     def insert_into_db(self, chat_id, name, email, address, device):
+
+        """
+        Вставка данных о заказе и клиенте в базу.
+        """
+
         self.cursor.execute("""INSERT INTO players (chat_id, name, email, address) VALUES (?, ?, ?, ?)""",
                             (chat_id, name, email, address))
         player_id = self.cursor.execute(f"""SELECT id FROM players WHERE chat_id = {chat_id}""").fetchone()[0]
@@ -67,10 +63,20 @@ class BotDatabase:
         self.conn.commit()
 
     def find_user(self, chat_id):
+
+        """
+        Поиск данных о клиенте в базе по ID чата.
+        """
+
         user = self.cursor.execute(f"""SELECT name, email, address FROM players WHERE chat_id = {chat_id}""").fetchone()
         return user
 
     def update_user(self, chat_id, name, email, address, device):
+
+        """
+        Изменение данных клиента в базе и вставка данных о заказе.
+        """
+
         self.cursor.execute("""UPDATE players SET name = ?, email = ?, address = ? WHERE chat_id = ?""",
                             (name, email, address, chat_id))
         player_id = self.cursor.execute(f"""SELECT id FROM players WHERE chat_id = {chat_id}""").fetchone()[0]
@@ -80,9 +86,19 @@ class BotDatabase:
         self.conn.commit()
 
     def device_list(self):
+
+        """
+        Вывод списка всех доступных к продаже устройств.
+        """
+
         devices = self.cursor.execute(
             """SELECT name FROM devices""").fetchall()
         return devices
 
     def close_db(self):
+
+        """
+        Прекращение связи с базой данных.
+        """
+
         self.conn.close()

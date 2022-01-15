@@ -1,6 +1,6 @@
 import telebot
 from config import LINK, TOKEN, CHAT_ID, MY_ID
-from db import BotDatabase, BotDatabaseConn
+from db import BotDatabase
 
 
 TEMP_ORDER = {
@@ -20,6 +20,12 @@ bot = telebot.TeleBot(TOKEN)
 @bot.message_handler(regexp='О нас')
 @bot.message_handler(commands=['start'])
 def start_command(message):
+
+    """
+    Вывод информационного сообщения с предложением возможности просмотреть
+    видеоролик о предлагаемой продукции и оформлением заказа.
+    """
+
     markup = telebot.types.InlineKeyboardMarkup()
     link_button = telebot.types.InlineKeyboardButton(
         'Видеообзор', callback_data='link')
@@ -39,6 +45,11 @@ def start_command(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle(call):
+
+    """
+    Процесс обработки сигналов от кнопок.
+    """
+
     data = call.data
     if data == 'link':
         bot.send_message(call.message.chat.id, f'{LINK}')
@@ -62,12 +73,13 @@ def handle(call):
     bot.answer_callback_query(call.id)
 
 
-def send_link(call):
-    bot.send_message(call.message.chat.id, f'{LINK}')
-
-
 @bot.message_handler(regexp='Подтвердить устройство')
 def order(msg):
+
+    """
+    Ввод основных данных о заказчике или считывание данных с БД при повторном заказе.
+    """
+
     id = msg.chat.id
     db = BotDatabase('database.db')
     user = db.find_user(id)
@@ -93,6 +105,11 @@ def order(msg):
 @bot.message_handler(regexp='Сменить устройство')
 @bot.message_handler(regexp='Оформить заказ')
 def choose_device(message):
+
+    """
+    Занесение записи о клиенте во временную переменную и запрос на выбор покупки.
+    """
+
     id = message.chat.id
     TEMP_ORDER[id] = {'device': '', 'name': '', 'email': '', 'address': ''}
     db = BotDatabase('database.db')
@@ -109,6 +126,12 @@ def choose_device(message):
 
 
 def device_finish(message, device):
+
+    """
+    Подтверждение выбора устройства или запрос на новый выбор.
+    Занесение выбранного устройства в соответствующее поле временной переменной.
+    """
+
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
     edit_button = telebot.types.KeyboardButton(
         'Сменить устройство')
@@ -118,13 +141,18 @@ def device_finish(message, device):
     id = message.chat.id
     bot.send_message(
         id,
-        f'Вы выбрали верное устройство?:\n'
+        f'Вы выбрали верное устройство?\n'
         f'Имя: {device}\n',
         reply_markup=markup)
     TEMP_ORDER[id]['device'] = device
 
 
 def enter_info(message, edit=0, value=None):
+
+    """
+    Запрос на ввод данных клиента.
+    """
+
     markup = telebot.types.ForceReply(selective=False)
     msg = bot.send_message(
         message.chat.id,
@@ -135,12 +163,24 @@ def enter_info(message, edit=0, value=None):
 
 
 def recieve_info(message, edit, value):
+
+    """
+    Получение введённых данных клиента и, если имело место редактирование данных,
+    перенаправление в меню выбора данных для редактирования.
+    """
+
     TEMP_ORDER[message.chat.id][value] = message.text
     if edit:
         edit_menu(message)
 
 
 def order_finish(message):
+
+    """
+    Запрос на подтверждение введённых данных с возможностью редактирования
+    в случае ошибки.
+    """
+
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
     edit_button = telebot.types.KeyboardButton(
         'Редактировать')
@@ -159,6 +199,12 @@ def order_finish(message):
 
 @bot.message_handler(regexp='Подтвердить заказ')
 def show_new_order(message):
+
+    """
+    Вывод итогового сообщения клиенту, отправка собранной заявки администратору,
+    перенос всех данных в базу данных, очистка локальных данных.
+    """
+
     id = message.chat.id
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
     about_button = telebot.types.KeyboardButton(
@@ -197,6 +243,11 @@ def show_new_order(message):
 
 @bot.message_handler(regexp='Редактировать')
 def edit_menu(message):
+
+    """
+    Вывод меню редактирования данных пользователя.
+    """
+
     markup = telebot.types.InlineKeyboardMarkup()
     edit_name_button = telebot.types.InlineKeyboardButton(
         'Имя', callback_data='name')
